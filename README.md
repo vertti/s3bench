@@ -76,15 +76,66 @@ s3bench/
     └── bench.sh
 ```
 
-## Benchmark Parameters
+## Results
 
-| Concurrency | Part Size |
-|-------------|-----------|
-| 10          | 16 MB     |
-| 20          | 32 MB     |
-| 50          | 64 MB     |
+Benchmarks run on EC2 c5n.2xlarge in eu-central-1, downloading a 3 GB file from S3 in the same region.
 
-Each configuration runs 3 iterations.
+### Peak Throughput (concurrency=32, part_size=32MB)
+
+| Implementation | Throughput | Notes |
+|----------------|------------|-------|
+| **Rust** (transfer-manager) | ~2.3 GB/s | Fastest at steady-state |
+| **Go** (aws-sdk-go-v2) | ~1.8 GB/s | Consistent across iterations |
+| **s5cmd** | ~1.1 GB/s | Stable baseline |
+| **Python** (boto3) | ~450 MB/s | Limited by GIL |
+
+### Key Findings
+
+1. **Rust is fastest at steady-state** - achieves ~2.3 GB/s with optimal settings (concurrency=32-64, part_size=32MB)
+
+2. **Go is most consistent** - no warmup penalty, performs the same on every download
+
+3. **Python is bottlenecked** - likely by GIL, tops out around 450-500 MB/s regardless of concurrency
+
+4. **Rust has a first-download penalty** - the first download in a process is 3-4x slower than subsequent ones:
+
+   ```
+   Rust (c=32, p=128MB):
+     Iteration 1: 4.08s (753 MB/s)   <- 3-4 seconds of warmup overhead
+     Iteration 2: 1.76s (1743 MB/s)
+     Iteration 3: 1.78s (1728 MB/s)
+
+   Go (c=32, p=128MB):
+     Iteration 1: 2.73s (1126 MB/s)  <- No warmup penalty
+     Iteration 2: 2.72s (1128 MB/s)
+     Iteration 3: 2.70s (1138 MB/s)
+   ```
+
+   This appears to be specific to the Rust transfer-manager - Go, Python, and s5cmd don't exhibit this behavior. We've [reported this issue](https://github.com/awslabs/aws-s3-transfer-manager-rs/issues/XXX) upstream.
+
+### Recommendation
+
+- For **single file downloads**: Go is currently the best choice (no warmup penalty)
+- For **multiple sequential downloads**: Rust after the first download
+- For **simplicity**: s5cmd is a solid CLI option
+
+## Running on EC2
+
+Scripts are provided to run benchmarks on EC2 for higher bandwidth:
+
+```bash
+# One-time setup (creates IAM role)
+aws-vault exec <admin-profile> -- ./ec2/setup-role.sh
+
+# Launch instance
+aws-vault exec <admin-profile> -- ./ec2/launch.sh
+
+# Connect via SSM
+aws-vault exec <admin-profile> -- ./ec2/connect.sh
+
+# Cleanup when done
+aws-vault exec <admin-profile> -- ./ec2/cleanup.sh
+```
 
 ## License
 
