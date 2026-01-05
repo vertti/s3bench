@@ -1,5 +1,5 @@
 [tools]
-python = "3.12.12"
-go = "1.23.12"
+python = "3.13.11"
+go = "1.24.11"
 rust = "1.92.0"
 uv = "latest"
