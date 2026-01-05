@@ -2,83 +2,18 @@
 
 Benchmark S3 download performance across Python, Go, and Rust with parallel chunk downloads.
 
-## Goal
-
-Compare S3 download speeds using:
-- **Python** - boto3 with TransferConfig
-- **Go** - aws-sdk-go-v2 s3manager
-- **Rust** - aws-sdk-s3-transfer-manager
-- **s5cmd** - High-performance S3 CLI (baseline)
-
-## Setup
-
-### Prerequisites
-
-Install [mise](https://mise.jdx.dev/) for tool management:
-
-```bash
-curl https://mise.run | sh
-```
-
-### Install tools
-
-```bash
-cd s3bench
-mise trust
-mise install
-```
-
-This installs Python 3.12, Go 1.23, Rust (stable), and uv.
-
-Optionally install s5cmd for baseline comparison:
-```bash
-mise exec -- go install github.com/peak/s5cmd/v2@latest
-```
-
-### Configure
-
-```bash
-cp config.sh.example config.sh
-# Edit config.sh with your S3 bucket/key/region
-```
-
-## Run Benchmarks
-
-### With aws-vault (SSO profiles)
-
-```bash
-aws-vault exec <your-profile> -- ./bench.sh
-```
-
-### With standard AWS credentials
-
-```bash
-./bench.sh
-```
-
-## Project Structure
-
-```
-s3bench/
-├── .mise.toml           # Tool versions
-├── config.sh.example    # Config template
-├── bench.sh             # Main benchmark runner
-├── python/
-│   ├── pyproject.toml
-│   └── download.py
-├── go/
-│   ├── go.mod
-│   └── main.go
-├── rust/
-│   ├── Cargo.toml
-│   └── src/main.rs
-└── s5cmd/
-    └── bench.sh
-```
-
 ## Results
 
 Benchmarks run on EC2 c5n.2xlarge in eu-central-1, downloading a 3 GB file from S3 in the same region.
+
+### Test Matrix
+
+| Implementation | Runtime | SDK/Library | Version |
+|----------------|---------|-------------|---------|
+| **Python** | Python 3.12 | boto3 | 1.35+ |
+| **Go** | Go 1.23 | aws-sdk-go-v2/s3manager | 1.17.43 |
+| **Rust** | Rust 1.83+ | aws-sdk-s3-transfer-manager | 0.1 (preview) |
+| **s5cmd** | Go 1.23 | s5cmd | v2 (latest) |
 
 ### Peak Throughput (concurrency=32, part_size=32MB)
 
@@ -121,6 +56,52 @@ Benchmarks run on EC2 c5n.2xlarge in eu-central-1, downloading a 3 GB file from 
 - For **multiple sequential downloads**: Rust after the first download
 - For **simplicity**: s5cmd is a solid CLI option
 
+## Setup
+
+### Prerequisites
+
+Install [mise](https://mise.jdx.dev/) for tool management:
+
+```bash
+curl https://mise.run | sh
+```
+
+### Install tools
+
+```bash
+cd s3bench
+mise trust
+mise install
+```
+
+This installs Python 3.12, Go 1.23, Rust (stable), and uv.
+
+Install s5cmd for baseline comparison:
+```bash
+mise exec -- go install github.com/peak/s5cmd/v2@latest
+```
+
+### Configure
+
+```bash
+cp config.sh.example config.sh
+# Edit config.sh with your S3 bucket/key/region
+```
+
+## Run Benchmarks
+
+### With aws-vault (SSO profiles)
+
+```bash
+aws-vault exec <your-profile> -- ./bench.sh
+```
+
+### With standard AWS credentials
+
+```bash
+./bench.sh
+```
+
 ## Running on EC2
 
 Scripts are provided to run benchmarks on EC2 for higher bandwidth:
@@ -137,6 +118,26 @@ aws-vault exec <admin-profile> -- ./ec2/connect.sh
 
 # Cleanup when done
 aws-vault exec <admin-profile> -- ./ec2/cleanup.sh
+```
+
+## Project Structure
+
+```
+s3bench/
+├── .mise.toml           # Tool versions
+├── config.sh.example    # Config template
+├── bench.sh             # Main benchmark runner
+├── python/
+│   ├── pyproject.toml
+│   └── download.py
+├── go/
+│   ├── go.mod
+│   └── main.go
+├── rust/
+│   ├── Cargo.toml
+│   └── src/main.rs
+└── s5cmd/
+    └── bench.sh
 ```
 
 ## License
