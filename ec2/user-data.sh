@@ -8,7 +8,7 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 echo "Starting s3bench setup..."
 
 # Install dependencies
-yum install -y git
+yum install -y git gcc
 
 # Switch to ec2-user for the rest
 su - ec2-user << 'USERSCRIPT'

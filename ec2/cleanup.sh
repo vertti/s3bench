@@ -5,6 +5,7 @@ set -e
 REGION="${AWS_REGION:-eu-central-1}"
 ROLE_NAME="s3bench-ec2-role"
 BUCKET_NAME="s3bench-test-eu-central-1"
+SG_NAME="s3bench-sg"
 
 echo "S3bench cleanup"
 echo "==============="
@@ -58,6 +59,18 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   aws iam delete-role --role-name "$ROLE_NAME" 2>/dev/null || true
 
   echo "IAM role deleted."
+fi
+
+# Delete security group (auto, no prompt - it's just a SG)
+echo ""
+echo "Checking for security group..."
+SG_ID=$(aws ec2 describe-security-groups --region "$REGION" --filters "Name=group-name,Values=$SG_NAME" --query 'SecurityGroups[0].GroupId' --output text 2>/dev/null)
+if [ -n "$SG_ID" ] && [ "$SG_ID" != "None" ]; then
+  echo "Deleting security group: $SG_ID"
+  aws ec2 delete-security-group --group-id "$SG_ID" --region "$REGION" 2>/dev/null || true
+  echo "Security group deleted."
+else
+  echo "No s3bench security group found."
 fi
 
 # Ask about S3 bucket
