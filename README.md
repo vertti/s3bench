@@ -111,7 +111,7 @@ Benchmarks run on EC2 c5n.2xlarge in eu-central-1, downloading a 3 GB file from 
      Iteration 3: 2.70s (1138 MB/s)
    ```
 
-   This appears to be specific to the Rust transfer-manager - Go, Python, and s5cmd don't exhibit this behavior. We've [reported this issue](https://github.com/awslabs/aws-s3-transfer-manager-rs/issues/XXX) upstream.
+   This appears to be specific to the Rust transfer-manager - Go, Python, and s5cmd don't exhibit this behavior. We've [reported this issue](https://github.com/awslabs/aws-s3-transfer-manager-rs/issues/128) upstream.
 
 ### Recommendation
 
