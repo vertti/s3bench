@@ -10,10 +10,10 @@ Benchmarks run on EC2 c5n.2xlarge in eu-central-1, downloading a 3 GB file from 
 
 | Implementation | Runtime | SDK/Library | Version |
 |----------------|---------|-------------|---------|
-| **Python** | Python 3.12 | boto3 | 1.35+ |
-| **Go** | Go 1.23 | aws-sdk-go-v2/s3manager | 1.17.43 |
-| **Rust** | Rust 1.83+ | aws-sdk-s3-transfer-manager | 0.1 (preview) |
-| **s5cmd** | Go 1.23 | s5cmd | v2 (latest) |
+| **Python** | Python 3.12 | boto3 | 1.42 |
+| **Go** | Go 1.23 | aws-sdk-go-v2/s3manager | 1.17 |
+| **Rust** | Rust 1.92 | aws-sdk-s3-transfer-manager | 0.1.3 (preview) |
+| **s5cmd** | Go 1.23 | s5cmd | v2 |
 
 ### Peak Throughput (concurrency=32, part_size=32MB)
 
