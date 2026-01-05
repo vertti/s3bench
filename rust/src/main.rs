@@ -72,6 +72,12 @@ async fn download_file(
 
 #[tokio::main]
 async fn main() -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    // Initialize tracing (controlled by RUST_LOG env var)
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_target(true)
+        .init();
+
     let args = Args::parse();
 
     eprintln!(
