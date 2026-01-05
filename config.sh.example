@@ -1,0 +1,14 @@
+#!/bin/bash
+# S3 Benchmark Configuration
+# Copy this file to config.sh and fill in your values
+
+export S3_BUCKET="your-bucket-name"
+export S3_KEY="path/to/your/large/file.gz"
+export S3_REGION="us-east-1"
+export AWS_PROFILE=""  # Leave empty to use default credentials
+export ITERATIONS=3
+export FILE_SIZE_BYTES=0  # Size of file in bytes (for throughput calculation)
+
+# Benchmark parameters to test
+export CONCURRENCY_LEVELS="10 20 50"
+export PART_SIZES_MB="16 32 64"

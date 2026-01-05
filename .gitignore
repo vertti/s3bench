@@ -1,0 +1,32 @@
+# Private config with actual credentials/bucket info
+config.sh
+
+# Downloaded test files
+*.gz
+*.fastq
+/downloads/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.python-version
+
+# Go
+/go/bin/
+/go/s3bench
+
+# Rust
+/rust/target/
+Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Benchmark results (optional - you may want to keep these)
+# results/
+
+# OS
+.DS_Store

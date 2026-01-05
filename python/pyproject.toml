@@ -1,0 +1,8 @@
+[project]
+name = "s3bench-python"
+version = "0.1.0"
+description = "S3 download benchmark using boto3"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.35.0",
+]
