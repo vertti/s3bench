@@ -113,6 +113,8 @@ Benchmarks run on EC2 c5n.2xlarge in eu-central-1, downloading a 3 GB file from 
 
    This appears to be specific to the Rust transfer-manager - Go, Python, and s5cmd don't exhibit this behavior. We've [reported this issue](https://github.com/awslabs/aws-s3-transfer-manager-rs/issues/128) upstream.
 
+   **Note:** The Rust transfer-manager is currently in [developer preview](https://github.com/awslabs/aws-s3-transfer-manager-rs) - it shows great promise at steady-state and this issue may well be addressed before stable release.
+
 ### Recommendation
 
 - For **single file downloads**: Go is currently the best choice (no warmup penalty)
