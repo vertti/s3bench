@@ -5,10 +5,14 @@
 export S3_BUCKET="your-bucket-name"
 export S3_KEY="path/to/your/large/file.gz"
 export S3_REGION="us-east-1"
-export AWS_PROFILE=""  # Leave empty to use default credentials
+export AWS_PROFILE=""  # Leave empty to use default credentials/instance role
 export ITERATIONS=3
 export FILE_SIZE_BYTES=0  # Size of file in bytes (for throughput calculation)
 
 # Benchmark parameters to test
-export CONCURRENCY_LEVELS="10 20 50"
-export PART_SIZES_MB="16 32 64"
+# Realistic options for parallel downloads:
+# - Low bandwidth (~100 Mbps): concurrency 5-10, part size 8-16 MB
+# - Medium bandwidth (~1 Gbps): concurrency 10-20, part size 16-32 MB
+# - High bandwidth (~10 Gbps): concurrency 20-100, part size 32-128 MB
+export CONCURRENCY_LEVELS="8 16 32 64"
+export PART_SIZES_MB="16 32 64 128"
