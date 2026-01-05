@@ -33,11 +33,11 @@ cd s3bench
 # Create config
 cat > config.sh << 'EOF'
 export S3_BUCKET="s3bench-test-eu-central-1"
-export S3_KEY="test-3gb.fastq.gz"
+export S3_KEY="test-3gb.bin"
 export S3_REGION="eu-central-1"
 export AWS_PROFILE=""
 export ITERATIONS=3
-export FILE_SIZE_BYTES=3328599695
+export FILE_SIZE_BYTES=3221225472
 export CONCURRENCY_LEVELS="8 16 32 64 128"
 export PART_SIZES_MB="16 32 64 128"
 EOF
