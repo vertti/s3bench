@@ -28,7 +28,7 @@ cd s3bench
 /home/ec2-user/.local/bin/mise install
 
 # Install s5cmd
-/home/ec2-user/.local/bin/mise exec -- go install github.com/peak/s5cmd/v2@latest
+/home/ec2-user/.local/bin/mise exec -- go install github.com/peak/s5cmd/v2@v2.3.0
 
 # Create config
 cat > config.sh << 'EOF'
