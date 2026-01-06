@@ -124,8 +124,8 @@ done
 
 ALL_RESULTS="$ALL_RESULTS]"
 
-# Save results
-echo "$ALL_RESULTS" | python3 -m json.tool > "$RESULTS_FILE"
+# Save results (compact JSON to stay under SSM output limits)
+echo "$ALL_RESULTS" > "$RESULTS_FILE"
 echo "Results saved to: $RESULTS_FILE"
 echo ""
 
