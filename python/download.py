@@ -30,13 +30,19 @@ def download_file(
     concurrency: int,
     part_size_mb: int,
     output_path: str,
+    use_crt: bool = False,
 ) -> float:
     """Download file and return elapsed time in seconds."""
-    config = TransferConfig(
-        max_concurrency=concurrency,
-        multipart_chunksize=part_size_mb * 1024 * 1024,
-        use_threads=True,
-    )
+    config_kwargs = {
+        "max_concurrency": concurrency,
+        "multipart_chunksize": part_size_mb * 1024 * 1024,
+    }
+    if use_crt:
+        config_kwargs["preferred_transfer_client"] = "crt"
+    else:
+        config_kwargs["use_threads"] = True
+
+    config = TransferConfig(**config_kwargs)
 
     start = time.perf_counter()
     client.download_file(bucket, key, output_path, Config=config)
@@ -54,6 +60,7 @@ def run_benchmark(
     part_size_mb: int,
     iterations: int,
     file_size_bytes: int,
+    use_crt: bool = False,
 ) -> dict:
     """Run benchmark with given parameters."""
     client = create_client(region, profile)
@@ -64,7 +71,7 @@ def run_benchmark(
         # Use temp file, delete after each iteration
         with tempfile.NamedTemporaryFile(delete=True) as tmp:
             elapsed = download_file(
-                client, bucket, key, concurrency, part_size_mb, tmp.name
+                client, bucket, key, concurrency, part_size_mb, tmp.name, use_crt
             )
             throughput_mbps = (file_size_bytes / (1024 * 1024)) / elapsed
             results.append({"elapsed": elapsed, "throughput_mbps": throughput_mbps})
@@ -99,10 +106,12 @@ def main():
     parser.add_argument("--part-size-mb", type=int, default=16, help="Part size in MB")
     parser.add_argument("--iterations", type=int, default=3, help="Number of iterations")
     parser.add_argument("--file-size", type=int, required=True, help="File size in bytes")
+    parser.add_argument("--crt", action="store_true", help="Use AWS CRT transfer client")
 
     args = parser.parse_args()
 
-    print(f"Python boto3 benchmark: concurrency={args.concurrency}, part_size={args.part_size_mb}MB", file=sys.stderr)
+    tool_name = "python-boto3-crt" if args.crt else "python-boto3"
+    print(f"{tool_name} benchmark: concurrency={args.concurrency}, part_size={args.part_size_mb}MB", file=sys.stderr)
 
     result = run_benchmark(
         bucket=args.bucket,
@@ -113,11 +122,12 @@ def main():
         part_size_mb=args.part_size_mb,
         iterations=args.iterations,
         file_size_bytes=args.file_size,
+        use_crt=args.crt,
     )
 
     # Output JSON for easy parsing
     import json
-    print(json.dumps({"tool": "python-boto3", **result}))
+    print(json.dumps({"tool": tool_name, **result}))
 
 
 if __name__ == "__main__":

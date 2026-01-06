@@ -79,7 +79,7 @@ for CONCURRENCY in $CONCURRENCY_LEVELS; do
 
         ARGS="$COMMON_ARGS --concurrency $CONCURRENCY --part-size-mb $PART_SIZE"
 
-        # Python
+        # Python (classic)
         echo "Python (boto3):"
         RESULT=$(cd "$SCRIPT_DIR/python" && mise exec -- uv run python download.py $ARGS)
         if [[ "$FIRST" == "true" ]]; then
@@ -88,6 +88,12 @@ for CONCURRENCY in $CONCURRENCY_LEVELS; do
         else
             ALL_RESULTS="$ALL_RESULTS,$RESULT"
         fi
+        echo ""
+
+        # Python (CRT)
+        echo "Python (boto3+CRT):"
+        RESULT=$(cd "$SCRIPT_DIR/python" && mise exec -- uv run python download.py $ARGS --crt)
+        ALL_RESULTS="$ALL_RESULTS,$RESULT"
         echo ""
 
         # Go
