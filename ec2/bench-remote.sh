@@ -54,16 +54,28 @@ COMMAND_ID=$(aws ssm send-command \
 echo "SSM Command ID: $COMMAND_ID" >&2
 
 # Poll for completion
+POLL_FAILURES=0
+MAX_POLL_FAILURES=10
+LAST_STATUS=""
+
 while true; do
     RESULT=$(aws ssm get-command-invocation \
         --command-id "$COMMAND_ID" \
         --instance-id "$INSTANCE_ID" \
         --region "$REGION" \
         --output json 2>/dev/null) || {
-        echo "  Waiting for command to start..." >&2
+        POLL_FAILURES=$((POLL_FAILURES + 1))
+        if [ "$POLL_FAILURES" -ge "$MAX_POLL_FAILURES" ]; then
+            echo "  Too many polling failures ($POLL_FAILURES), giving up" >&2
+            exit 1
+        fi
+        echo "  Waiting for command status (attempt $POLL_FAILURES/$MAX_POLL_FAILURES)..." >&2
         sleep 10
         continue
     }
+
+    # Reset failure counter on successful API call
+    POLL_FAILURES=0
 
     STATUS=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['Status'])")
 
@@ -78,7 +90,10 @@ while true; do
             exit 1
             ;;
         *)
-            echo "  Status: $STATUS (still running)..." >&2
+            if [ "$STATUS" != "$LAST_STATUS" ]; then
+                echo "  Status: $STATUS" >&2
+            fi
+            LAST_STATUS="$STATUS"
             sleep 30
             ;;
     esac

@@ -5,11 +5,15 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESULTS_DIR="${SCRIPT_DIR}/../results"
 
-# Default instance types: distinct sustained bandwidth tiers
-# c5n.xlarge:  ~10 Gbps  ($0.22/hr)
-# c5n.4xlarge: 25 Gbps   ($0.86/hr)
-# c5n.9xlarge: 50 Gbps   ($1.94/hr)
-INSTANCE_TYPES="${INSTANCE_TYPES:-c5n.xlarge c5n.4xlarge c5n.9xlarge}"
+# Default instance types: range of bandwidth tiers from constrained to high
+# t3.micro:    32 Mbps baseline   ($0.01/hr) - free tier, CI runners
+# t3.small:    128 Mbps baseline  ($0.02/hr) - minimal test envs
+# t3.medium:   256 Mbps baseline  ($0.04/hr) - common dev/test
+# t3.xlarge:   1 Gbps baseline    ($0.17/hr) - small workloads
+# m5.large:    750 Mbps baseline  ($0.10/hr) - general purpose
+# c5n.xlarge:  5 Gbps baseline    ($0.22/hr) - network optimized
+# c5n.9xlarge: 50 Gbps sustained  ($1.94/hr) - high bandwidth
+INSTANCE_TYPES="${INSTANCE_TYPES:-t3.micro t3.small t3.medium t3.xlarge m5.large c5n.xlarge c5n.9xlarge}"
 
 echo "=========================================="
 echo "S3 Benchmark Matrix Run"

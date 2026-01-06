@@ -13,8 +13,8 @@ from collections import defaultdict
 def extract_instance_type(filename: str) -> str:
     """Extract instance type from filename like 'c5n.xlarge_20240105_123456.json'"""
     name = Path(filename).stem
-    # Match patterns like c5n.xlarge, c5n.4xlarge, etc.
-    match = re.match(r'(c5n\.[^_]+)', name)
+    # Match patterns like t3.micro, m5.large, c5n.xlarge, c5n.4xlarge, etc.
+    match = re.match(r'([a-z0-9]+\.[a-z0-9]+)', name)
     if match:
         return match.group(1)
     return name.split('_')[0]
@@ -61,11 +61,18 @@ def main():
     files = sys.argv[1:]
     results_by_instance = load_results(files)
 
-    # Instance bandwidth estimates (sustained)
+    # Instance bandwidth estimates (baseline / burst)
     bandwidth_map = {
-        'c5n.xlarge': '~10 Gbps',
-        'c5n.2xlarge': '~15 Gbps',
-        'c5n.4xlarge': '25 Gbps',
+        't3.micro': '32 Mbps',
+        't3.small': '128 Mbps',
+        't3.medium': '256 Mbps',
+        't3.large': '512 Mbps',
+        't3.xlarge': '1 Gbps',
+        'm5.large': '750 Mbps',
+        'm5.xlarge': '1.25 Gbps',
+        'c5n.xlarge': '5 Gbps',
+        'c5n.2xlarge': '10 Gbps',
+        'c5n.4xlarge': '15 Gbps',
         'c5n.9xlarge': '50 Gbps',
         'c5n.18xlarge': '100 Gbps',
     }
