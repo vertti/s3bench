@@ -4,57 +4,75 @@ Benchmark S3 download performance across Python, Go, and Rust with parallel chun
 
 ## Results
 
-Benchmarks run on EC2 c5n.2xlarge in eu-central-1, downloading a 3 GB file from S3 in the same region.
+Benchmarks run on various EC2 instance types in eu-central-1, downloading a 3 GB file from S3 in the same region. Each configuration runs 3 iterations.
 
-### Test Matrix
+### Tools Tested
 
-| Implementation | Runtime | SDK/Library | Version |
-|----------------|---------|-------------|---------|
-| **Python** | Python 3.13 | boto3 | 1.42 |
-| **Go** | Go 1.24 | aws-sdk-go-v2/s3manager | 1.17 |
-| **Rust** | Rust 1.92 | aws-sdk-s3-transfer-manager | 0.1.3 (preview) |
-| **s5cmd** | Go 1.24 | s5cmd | 2.3.0 |
+| Tool | Language | Library |
+|------|----------|---------|
+| go-sdk | Go 1.24 | aws-sdk-go-v2 s3manager |
+| rust-transfer-manager | Rust 1.92 | aws-s3-transfer-manager (preview) |
+| python-boto3-crt | Python 3.13 | boto3 + AWS CRT |
+| python-boto3 | Python 3.13 | boto3 |
+| s5cmd | Go | s5cmd v2.3 |
 
-### Peak Throughput (concurrency=32, part_size=32MB)
+### Results by Instance Type
 
-| Implementation | Throughput | Notes |
-|----------------|------------|-------|
-| **Rust** (transfer-manager) | ~2.3 GB/s | Fastest at steady-state |
-| **Go** (aws-sdk-go-v2) | ~1.8 GB/s | Consistent across iterations |
-| **s5cmd** | ~1.1 GB/s | Stable baseline |
-| **Python** (boto3) | ~450 MB/s | Limited by GIL |
+#### c5n.9xlarge (50 Gbps sustained)
 
-### Key Findings
+| Tool | Throughput | Concurrency | Part Size |
+|------|------------|-------------|-----------|
+| go-sdk | 4,023 MB/s | 128 | 16 MB |
+| rust-transfer-manager | 2,852 MB/s | 64 | 32 MB |
+| python-boto3-crt | 1,810 MB/s | 32 | 16 MB |
+| s5cmd | 1,628 MB/s | 64 | 16 MB |
+| python-boto3 | 746 MB/s | 16 | 32 MB |
 
-1. **Rust is fastest at steady-state** - achieves ~2.3 GB/s with optimal settings (concurrency=32-64, part_size=32MB)
+[Full results →](results/c5n.9xlarge_20260106_201850.json)
 
-2. **Go is most consistent** - no warmup penalty, performs the same on every download
+#### c5n.xlarge (5 Gbps baseline, 25 Gbps burst)
 
-3. **Python is bottlenecked** - likely by GIL, tops out around 450-500 MB/s regardless of concurrency
+*Results pending*
 
-4. **Rust has a first-download penalty** - the first download in a process is 3-4x slower than subsequent ones:
+#### m5.large (750 Mbps baseline, 10 Gbps burst)
 
-   ```
-   Rust (c=32, p=128MB):
-     Iteration 1: 4.08s (753 MB/s)   <- 3-4 seconds of warmup overhead
-     Iteration 2: 1.76s (1743 MB/s)
-     Iteration 3: 1.78s (1728 MB/s)
+*Results pending*
 
-   Go (c=32, p=128MB):
-     Iteration 1: 2.73s (1126 MB/s)  <- No warmup penalty
-     Iteration 2: 2.72s (1128 MB/s)
-     Iteration 3: 2.70s (1138 MB/s)
-   ```
+#### t3.xlarge (1 Gbps baseline, 5 Gbps burst)
 
-   This appears to be specific to the Rust transfer-manager - Go, Python, and s5cmd don't exhibit this behavior. We've [reported this issue](https://github.com/awslabs/aws-s3-transfer-manager-rs/issues/128) upstream.
+*Results pending*
 
-   **Note:** The Rust transfer-manager is currently in [developer preview](https://github.com/awslabs/aws-s3-transfer-manager-rs) - it shows great promise at steady-state and this issue may well be addressed before stable release.
+#### t3.medium (256 Mbps baseline, 5 Gbps burst)
 
-### Recommendation
+*Results pending*
 
-- For **single file downloads**: Go is currently the best choice (no warmup penalty)
-- For **multiple sequential downloads**: Rust after the first download
-- For **simplicity**: s5cmd is a solid CLI option
+#### t3.small (128 Mbps baseline, 5 Gbps burst)
+
+*Results pending*
+
+#### t3.micro (32 Mbps baseline, 5 Gbps burst)
+
+*Results pending*
+
+### Known Issues
+
+**Rust has a first-download penalty** - the first download in a process is 2-3x slower than subsequent ones due to lazy connection initialization:
+
+```
+Rust (c=32, p=128MB):
+  Iteration 1: 4.08s (753 MB/s)   <- connection setup overhead
+  Iteration 2: 1.76s (1743 MB/s)
+  Iteration 3: 1.78s (1728 MB/s)
+
+Go (c=32, p=128MB):
+  Iteration 1: 2.73s (1126 MB/s)  <- no warmup penalty
+  Iteration 2: 2.72s (1128 MB/s)
+  Iteration 3: 2.70s (1138 MB/s)
+```
+
+This is specific to the Rust transfer-manager. We've [reported this issue](https://github.com/awslabs/aws-s3-transfer-manager-rs/issues/128) upstream.
+
+**Note:** The Rust transfer-manager is in [developer preview](https://github.com/awslabs/aws-s3-transfer-manager-rs) - this may be addressed before stable release.
 
 ## Setup
 
