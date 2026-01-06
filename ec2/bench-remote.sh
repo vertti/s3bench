@@ -55,8 +55,9 @@ echo "SSM Command ID: $COMMAND_ID" >&2
 
 # Poll for completion
 POLL_FAILURES=0
-MAX_POLL_FAILURES=10
+MAX_POLL_FAILURES=30
 LAST_STATUS=""
+SEEN_IN_PROGRESS=false
 
 while true; do
     RESULT=$(aws ssm get-command-invocation \
@@ -65,11 +66,12 @@ while true; do
         --region "$REGION" \
         --output json 2>/dev/null) || {
         POLL_FAILURES=$((POLL_FAILURES + 1))
-        if [ "$POLL_FAILURES" -ge "$MAX_POLL_FAILURES" ]; then
-            echo "  Too many polling failures ($POLL_FAILURES), giving up" >&2
+        # Only give up if we haven't seen the command running yet
+        if [ "$SEEN_IN_PROGRESS" = "false" ] && [ "$POLL_FAILURES" -ge "$MAX_POLL_FAILURES" ]; then
+            echo "  Command never started after $POLL_FAILURES attempts, giving up" >&2
             exit 1
         fi
-        echo "  Waiting for command status (attempt $POLL_FAILURES/$MAX_POLL_FAILURES)..." >&2
+        echo "  SSM API error (attempt $POLL_FAILURES, will retry)..." >&2
         sleep 10
         continue
     }
@@ -88,6 +90,14 @@ while true; do
             echo "Benchmark failed with status: $STATUS" >&2
             echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('StandardErrorContent', ''))" >&2
             exit 1
+            ;;
+        "InProgress"|"Pending")
+            SEEN_IN_PROGRESS=true
+            if [ "$STATUS" != "$LAST_STATUS" ]; then
+                echo "  Status: $STATUS" >&2
+            fi
+            LAST_STATUS="$STATUS"
+            sleep 30
             ;;
         *)
             if [ "$STATUS" != "$LAST_STATUS" ]; then

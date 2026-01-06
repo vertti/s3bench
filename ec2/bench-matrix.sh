@@ -5,15 +5,15 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESULTS_DIR="${SCRIPT_DIR}/../results"
 
-# Default instance types: range of bandwidth tiers from constrained to high
-# t3.micro:    32 Mbps baseline   ($0.01/hr) - free tier, CI runners
-# t3.small:    128 Mbps baseline  ($0.02/hr) - minimal test envs
-# t3.medium:   256 Mbps baseline  ($0.04/hr) - common dev/test
-# t3.xlarge:   1 Gbps baseline    ($0.17/hr) - small workloads
-# m5.large:    750 Mbps baseline  ($0.10/hr) - general purpose
-# c5n.xlarge:  5 Gbps baseline    ($0.22/hr) - network optimized
+# Default instance types: high bandwidth first (faster to complete)
 # c5n.9xlarge: 50 Gbps sustained  ($1.94/hr) - high bandwidth
-INSTANCE_TYPES="${INSTANCE_TYPES:-t3.micro t3.small t3.medium t3.xlarge m5.large c5n.xlarge c5n.9xlarge}"
+# c5n.xlarge:  5 Gbps baseline    ($0.22/hr) - network optimized
+# m5.large:    750 Mbps baseline  ($0.10/hr) - general purpose
+# t3.xlarge:   1 Gbps baseline    ($0.17/hr) - small workloads
+# t3.medium:   256 Mbps baseline  ($0.04/hr) - common dev/test
+# t3.small:    128 Mbps baseline  ($0.02/hr) - minimal test envs
+# t3.micro:    32 Mbps baseline   ($0.01/hr) - free tier, CI runners
+INSTANCE_TYPES="${INSTANCE_TYPES:-c5n.9xlarge c5n.xlarge m5.large t3.xlarge t3.medium t3.small t3.micro}"
 
 echo "=========================================="
 echo "S3 Benchmark Matrix Run"
