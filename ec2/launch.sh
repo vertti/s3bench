@@ -4,14 +4,16 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REGION="${AWS_REGION:-eu-central-1}"
-INSTANCE_TYPE="${INSTANCE_TYPE:-c5n.2xlarge}"
 AMI_ID="${AMI_ID:-ami-0669b163befffbdfc}"  # Amazon Linux 2023 in eu-central-1
 ROLE_NAME="s3bench-ec2-role"
 
-echo "Launching EC2 instance..."
-echo "  Region: $REGION"
-echo "  Instance type: $INSTANCE_TYPE"
-echo "  AMI: $AMI_ID"
+# Accept instance type as CLI arg, then env var, then default
+INSTANCE_TYPE="${1:-${INSTANCE_TYPE:-c5n.2xlarge}}"
+
+echo "Launching EC2 instance..." >&2
+echo "  Region: $REGION" >&2
+echo "  Instance type: $INSTANCE_TYPE" >&2
+echo "  AMI: $AMI_ID" >&2
 
 # Get default VPC
 VPC_ID=$(aws ec2 describe-vpcs --region "$REGION" --filters "Name=isDefault,Values=true" --query 'Vpcs[0].VpcId' --output text)
@@ -21,7 +23,7 @@ SG_NAME="s3bench-sg"
 SG_ID=$(aws ec2 describe-security-groups --region "$REGION" --filters "Name=group-name,Values=$SG_NAME" "Name=vpc-id,Values=$VPC_ID" --query 'SecurityGroups[0].GroupId' --output text 2>/dev/null)
 
 if [ "$SG_ID" == "None" ] || [ -z "$SG_ID" ]; then
-  echo "Creating security group..."
+  echo "Creating security group..." >&2
   SG_ID=$(aws ec2 create-security-group \
     --group-name "$SG_NAME" \
     --description "Security group for s3bench EC2 instances" \
@@ -36,7 +38,7 @@ if [ "$SG_ID" == "None" ] || [ -z "$SG_ID" ]; then
     --region "$REGION" 2>/dev/null || true
 fi
 
-echo "  Security group: $SG_ID"
+echo "  Security group: $SG_ID" >&2
 
 # Launch instance
 RESULT=$(aws ec2 run-instances \
@@ -51,20 +53,13 @@ RESULT=$(aws ec2 run-instances \
 
 INSTANCE_ID=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['Instances'][0]['InstanceId'])")
 
-echo ""
-echo "Instance launched: $INSTANCE_ID"
-echo ""
-echo "Waiting for instance to start..."
+echo "" >&2
+echo "Instance launched: $INSTANCE_ID" >&2
+echo "" >&2
+echo "Waiting for instance to start..." >&2
 aws ec2 wait instance-running --instance-ids "$INSTANCE_ID" --region "$REGION"
 
-echo "Instance is running!"
-echo ""
-echo "Wait ~3-5 minutes for user-data setup to complete, then connect with:"
-echo ""
-echo "  ./ec2/connect.sh $INSTANCE_ID"
-echo ""
-echo "Or manually:"
-echo "  aws ssm start-session --target $INSTANCE_ID --region $REGION"
-echo ""
-echo "To check setup progress, run in the session:"
-echo "  tail -f /var/log/user-data.log"
+echo "Instance is running!" >&2
+
+# Output instance ID to stdout for scripting
+echo "$INSTANCE_ID"
