@@ -32,7 +32,15 @@ Benchmarks run on various EC2 instance types in eu-central-1, downloading a 3 GB
 
 #### c5n.xlarge (5 Gbps baseline, 25 Gbps burst)
 
-*Results pending*
+| Tool | Throughput | Concurrency | Part Size |
+|------|------------|-------------|-----------|
+| go-sdk | 2,419 MB/s | 64 | 16 MB |
+| rust-transfer-manager | 1,403 MB/s | 32 | 16 MB |
+| python-boto3-crt | 1,168 MB/s | 32 | 16 MB |
+| s5cmd | 1,138 MB/s | 128 | 16 MB |
+| python-boto3 | 465 MB/s | 8 | 128 MB |
+
+[Full results →](results/c5n.xlarge_20260106_204712.json)
 
 #### m5.large (750 Mbps baseline, 10 Gbps burst)
 
