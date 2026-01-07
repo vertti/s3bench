@@ -20,17 +20,21 @@ case "$INSTANCE_TYPE" in
         # 10-25 Gbps burst - test full range
         CONCURRENCY_LEVELS="8 16 32 64 128"
         ;;
-    m5.large|m5.xlarge|t3.xlarge|t3.large)
-        # 1-10 Gbps burst, lower baseline - skip high concurrency
+    m5.xlarge|t3.xlarge|t3.large)
+        # 1-10 Gbps burst - moderate concurrency
         CONCURRENCY_LEVELS="8 16 32"
+        ;;
+    m5.large)
+        # 750 Mbps baseline, 10 Gbps burst - burst exhausts quickly at high concurrency
+        CONCURRENCY_LEVELS="8 16"
         ;;
     t3.medium|t3.small|t3.micro|t3.nano)
         # Very limited bandwidth - minimal concurrency
-        CONCURRENCY_LEVELS="4 8 16"
+        CONCURRENCY_LEVELS="4 8"
         ;;
     *)
         # Default: moderate range
-        CONCURRENCY_LEVELS="8 16 32 64"
+        CONCURRENCY_LEVELS="8 16 32"
         ;;
 esac
 
