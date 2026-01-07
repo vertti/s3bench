@@ -22,6 +22,11 @@ fi
 : "${CONCURRENCY_LEVELS:=10 20 50}"
 : "${PART_SIZES_MB:=16 32 64}"
 
+# Allow override via environment (useful for remote benchmarks with different instance types)
+if [[ -n "$CONCURRENCY_OVERRIDE" ]]; then
+    CONCURRENCY_LEVELS="$CONCURRENCY_OVERRIDE"
+fi
+
 # Results file
 RESULTS_DIR="$SCRIPT_DIR/results"
 mkdir -p "$RESULTS_DIR"

@@ -9,6 +9,33 @@ RESULTS_DIR="${SCRIPT_DIR}/../results"
 
 mkdir -p "$RESULTS_DIR"
 
+# Set concurrency levels based on instance bandwidth tier
+# High concurrency is pointless on bandwidth-limited instances
+case "$INSTANCE_TYPE" in
+    c5n.9xlarge|c5n.18xlarge|c5n.metal)
+        # 50-100 Gbps - test full range
+        CONCURRENCY_LEVELS="8 16 32 64 128"
+        ;;
+    c5n.xlarge|c5n.2xlarge|c5n.4xlarge)
+        # 10-25 Gbps burst - test full range
+        CONCURRENCY_LEVELS="8 16 32 64 128"
+        ;;
+    m5.large|m5.xlarge|t3.xlarge|t3.large)
+        # 1-10 Gbps burst, lower baseline - skip high concurrency
+        CONCURRENCY_LEVELS="8 16 32"
+        ;;
+    t3.medium|t3.small|t3.micro|t3.nano)
+        # Very limited bandwidth - minimal concurrency
+        CONCURRENCY_LEVELS="4 8 16"
+        ;;
+    *)
+        # Default: moderate range
+        CONCURRENCY_LEVELS="8 16 32 64"
+        ;;
+esac
+
+echo "Using concurrency levels: $CONCURRENCY_LEVELS" >&2
+
 # Cleanup function to ensure instance is terminated
 INSTANCE_ID=""
 cleanup() {
@@ -40,13 +67,14 @@ echo "Step 2: Waiting for bootstrap..." >&2
 echo "" >&2
 echo "Step 3: Running benchmarks (this may take 30-60 minutes)..." >&2
 
-# Send command with extended timeout (2 hours)
+# Send command with extended timeout (4 hours for slow instances)
 # Run as ec2-user since mise is installed there
+# Use CONCURRENCY_OVERRIDE env var to set instance-appropriate concurrency
 COMMAND_ID=$(aws ssm send-command \
     --instance-ids "$INSTANCE_ID" \
     --document-name "AWS-RunShellScript" \
-    --parameters 'commands=["sudo -u ec2-user bash -c \"cd /home/ec2-user/s3bench && source ~/.bashrc && ./bench.sh\" 2>&1"]' \
-    --timeout-seconds 7200 \
+    --parameters "commands=[\"sudo -u ec2-user bash -c 'cd /home/ec2-user/s3bench && source ~/.bashrc && CONCURRENCY_OVERRIDE=\\\"$CONCURRENCY_LEVELS\\\" ./bench.sh' 2>&1\"]" \
+    --timeout-seconds 14400 \
     --region "$REGION" \
     --output text \
     --query 'Command.CommandId')
