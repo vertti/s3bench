@@ -78,6 +78,30 @@ Benchmarks run on various EC2 instance types in eu-central-1, downloading a 3 GB
 
 [Full results →](results/t3.medium_20260107_114832.json)
 
+### Quick Win for Python Users
+
+If you're using boto3, simply installing the CRT extension gives you **1.5-2.5x faster downloads** with minimal code changes:
+
+```bash
+pip install boto3[crt]
+```
+
+```python
+from boto3.s3.transfer import TransferConfig
+
+config = TransferConfig(preferred_transfer_client="crt")
+s3.download_file(bucket, key, path, Config=config)
+```
+
+| Instance | boto3 | boto3+CRT | Speedup |
+|----------|-------|-----------|---------|
+| c5n.9xlarge | 746 MB/s | 1,810 MB/s | **2.4x** |
+| c5n.xlarge | 465 MB/s | 1,168 MB/s | **2.5x** |
+| m5.large | 401 MB/s | 639 MB/s | **1.6x** |
+| t3.xlarge | 272 MB/s | 505 MB/s | **1.9x** |
+| t3.medium | 331 MB/s | 493 MB/s | **1.5x** |
+
+The [AWS CRT](https://github.com/awslabs/aws-crt-python) (Common Runtime) is a high-performance C library that boto3 can use for S3 transfers. It's surprisingly underutilized given the performance gains.
 
 ### About EC2 Network Bandwidth
 
