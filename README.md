@@ -44,23 +44,50 @@ Benchmarks run on various EC2 instance types in eu-central-1, downloading a 3 GB
 
 #### m5.large (750 Mbps baseline, 10 Gbps burst)
 
-*Results pending*
+| Tool | Throughput | Concurrency | Part Size |
+|------|------------|-------------|-----------|
+| go-sdk | 900 MB/s | 16 | 16 MB |
+| rust-transfer-manager | 707 MB/s | 16 | 16 MB |
+| s5cmd | 651 MB/s | 16 | 32 MB |
+| python-boto3-crt | 639 MB/s | 8 | 32 MB |
+| python-boto3 | 401 MB/s | 16 | 64 MB |
+
+[Full results →](results/m5.large_20260107_105637.json)
 
 #### t3.xlarge (1 Gbps baseline, 5 Gbps burst)
 
-*Results pending*
+| Tool | Throughput | Concurrency | Part Size |
+|------|------------|-------------|-----------|
+| rust-transfer-manager | 530 MB/s | 8 | 16 MB |
+| go-sdk | 529 MB/s | 32 | 16 MB |
+| s5cmd | 506 MB/s | 16 | 16 MB |
+| python-boto3-crt | 505 MB/s | 8 | 16 MB |
+| python-boto3 | 272 MB/s | 16 | 32 MB |
+
+[Full results →](results/t3.xlarge_20260107_112321.json)
 
 #### t3.medium (256 Mbps baseline, 5 Gbps burst)
 
-*Results pending*
+| Tool | Throughput | Concurrency | Part Size |
+|------|------------|-------------|-----------|
+| rust-transfer-manager | 523 MB/s | 8 | 16 MB |
+| go-sdk | 516 MB/s | 8 | 16 MB |
+| python-boto3-crt | 493 MB/s | 8 | 16 MB |
+| s5cmd | 489 MB/s | 8 | 16 MB |
+| python-boto3 | 331 MB/s | 4 | 64 MB |
 
-#### t3.small (128 Mbps baseline, 5 Gbps burst)
+[Full results →](results/t3.medium_20260107_114832.json)
 
-*Results pending*
 
-#### t3.micro (32 Mbps baseline, 5 Gbps burst)
+### About EC2 Network Bandwidth
 
-*Results pending*
+EC2 instances have two bandwidth limits:
+- **Baseline**: Guaranteed sustained bandwidth
+- **Burst**: Higher bandwidth available temporarily using network credits
+
+For example, m5.large has 750 Mbps (~94 MB/s) baseline but can burst to 10 Gbps. Once burst credits are exhausted, throughput drops to baseline. This is why we test fewer concurrency levels on smaller instances - high concurrency quickly exhausts burst credits, making benchmarks take hours at throttled speeds.
+
+High-bandwidth instances like c5n.9xlarge have 50 Gbps *sustained* (no burst limit), so we can test the full concurrency range.
 
 ### Known Issues
 

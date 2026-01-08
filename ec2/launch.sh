@@ -40,7 +40,7 @@ fi
 
 echo "  Security group: $SG_ID" >&2
 
-# Launch instance with 20GB root volume (default 8GB fills up on small instances)
+# Launch instance
 RESULT=$(aws ec2 run-instances \
   --image-id "$AMI_ID" \
   --instance-type "$INSTANCE_TYPE" \
@@ -49,7 +49,6 @@ RESULT=$(aws ec2 run-instances \
   --region "$REGION" \
   --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=s3bench}]' \
   --user-data file://"$SCRIPT_DIR/user-data.sh" \
-  --block-device-mappings '[{"DeviceName":"/dev/xvda","Ebs":{"VolumeSize":20,"VolumeType":"gp3","DeleteOnTermination":true}}]' \
   --output json)
 
 INSTANCE_ID=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['Instances'][0]['InstanceId'])")
